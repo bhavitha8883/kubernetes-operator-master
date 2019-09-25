@@ -1,0 +1,39 @@
+language: go
+sudo: required
+
+env:
+  global:
+    - GO111MODULE=on
+    - CHANGE_MINIKUBE_NONE_USER=true
+    - MINIKUBE_WANTUPDATENOTIFICATION=false
+    - MINIKUBE_WANTREPORTERRORPROMPT=false
+    - MINIKUBE_HOME=$HOME
+    - KUBECONFIG=$HOME/.kube/config
+
+go:
+- 1.12.x
+
+matrix:
+  fast_finish: true
+  allow_failures:
+  - go: master
+
+before_install:
+- make go-dependencies
+
+jobs:
+  include:
+    - stage: unit
+      name: "Unit Tests"
+      script:
+        - travis_wait 15 make verify
+    - stage: e2e
+      name: "End-to-End Tests"
+      script:
+        - travis_wait 10 make travis-prepare
+        - travis_wait 45 make build e2e
+
+cache:
+  directories:
+    - vendor
+    - /home/travis/.minikube/
